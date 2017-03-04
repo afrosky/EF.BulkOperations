@@ -69,7 +69,7 @@ var usersToDelete = new List<User>
 	new User { IsInternal = false }
 };
 
-context.BulkUpdate(usersToUpdate, settings =>
+context.BulkDelete(usersToUpdate, settings =>
 {
 	settings.IdentiferColumns = s => new { s.IsInternal };
 	settings.IncludedColumns = s => new { s.IsInternal };
