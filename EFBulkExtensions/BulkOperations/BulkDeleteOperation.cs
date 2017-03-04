@@ -4,8 +4,10 @@
     using System.Data.Entity;
     using System.Data.SqlClient;
     using System.Linq;
+    using Helpers;
     using Extensions;
     using Generators;
+    using System.Data.Entity.Core;
 
     public class BulkDeleteOperation : BulkOperationBase
     {
@@ -21,29 +23,41 @@
         {
         }
 
-        protected override long ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
+        protected override int ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
         {
             var tmpTableName = context.RandomTableName<TEntity>();
             var entities = collection.ToList();
             var database = context.Database;
             var affectedRows = 0;
 
-            // Retrieve primary keys column definition
-            var pksColumnDef = context.GetTablePrimaryKeys<TEntity>();
+            // Retrieve included columns definition
+            var includedColumnsDef = settings.IncludedColumns != null
+                ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IncludedColumns.Body))
+                : context.GetTablePrimaryKeys<TEntity>();
+
+            // Retrieve identifier columns definition
+            var identifierColumnsDef = settings.IdentifierColumns != null
+                ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IdentifierColumns.Body))
+                : context.GetTablePrimaryKeys<TEntity>();
+
+            if (!identifierColumnsDef.All(pk => includedColumnsDef.Any(c => pk.PropertyName == c.PropertyName)))
+            {
+                throw new EntityException(@"Included columns must contain identifier columns.");
+            }
 
             // Convert entity collection into a DataTable
-            var dataTable = context.ToDataTable(entities, pksColumnDef);
+            var dataTable = context.ToDataTable(entities, identifierColumnsDef);
 
             // Create temporary table to store values to update
-            var command = SqlGenerator.BuildCreateTempTable<TEntity>(context, tmpTableName, pksColumnDef);
+            var command = SqlGenerator.BuildCreateTempTable<TEntity>(context, tmpTableName, identifierColumnsDef);
             database.ExecuteSqlCommand(command);
 
-            // Bulk inset data to temporary temporary table
+            // Bulk insert data to temporary temporary table
             context.BulkCopy(dataTable, tmpTableName, SqlBulkCopyOptions.Default);
 
             // Copy data from temporary table to destination table
             command = SqlGenerator
-                .BuildMergeIntoDelete(tmpTableName, context.GetTableName<TEntity>(), pksColumnDef);
+                .BuildMergeIntoDelete(tmpTableName, context.GetTableName<TEntity>(), identifierColumnsDef);
 
             affectedRows = database.ExecuteSqlCommand(command);
 
