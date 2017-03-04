@@ -9,7 +9,7 @@ namespace EFBulkExtensions.BulkOperations
 {
     public abstract class BulkOperationBase : IBulkOperation
     {
-        public long Execute<TEntity>(DbContext context, IEnumerable<TEntity> collection, Action<BulkOperationSettings<TEntity>> settingsFactory = null)
+        public int Execute<TEntity>(DbContext context, IEnumerable<TEntity> collection, Action<BulkOperationSettings<TEntity>> settingsFactory = null)
             where TEntity : class
         {
             if (!context.ContainsTable<TEntity>())
@@ -17,7 +17,7 @@ namespace EFBulkExtensions.BulkOperations
                 throw new EntityException(@"The specified entity type is not recognized as a DbContext type.");
             }
 
-            var affectedRows = default(long);
+            var affectedRows = default(int);
             var settings = new BulkOperationSettings<TEntity>();
 
             if (!collection.Any())
@@ -50,7 +50,7 @@ namespace EFBulkExtensions.BulkOperations
             }
         }
 
-        protected abstract long ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
+        protected abstract int ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
             where TEntity : class;
     }
 }

@@ -26,7 +26,7 @@
         /// <param name="entities">The list of entities to insert.</param>
         /// <param name="settings">The bulk operation settings.</param>
         /// <returns>The number of affected entities.</returns>
-        public static long BulkInsert<TEntity>(
+        public static int BulkInsert<TEntity>(
             this DbContext context,
             IEnumerable<TEntity> entities,
             Action<BulkOperationSettings<TEntity>> settings = null)
@@ -43,7 +43,7 @@
         /// <param name="entities">The list of entities to update.</param>
         /// <param name="settings">The bulk operation settings.</param>
         /// <returns>The number of affected entities.</returns>
-        public static long BulkUpdate<TEntity>(
+        public static int BulkUpdate<TEntity>(
             this DbContext context,
             IEnumerable<TEntity> entities,
             Action<BulkOperationSettings<TEntity>> settings = null)
@@ -60,7 +60,7 @@
         /// <param name="entities">The list of entities to delete.</param>
         /// <param name="settings">The bulk operation settings.</param>
         /// <returns>The number of affected entities.</returns>
-        public static long BulkDelete<TEntity>(
+        public static int BulkDelete<TEntity>(
             this DbContext context,
             IEnumerable<TEntity> entities,
             Action<BulkOperationSettings<TEntity>> settings = null)

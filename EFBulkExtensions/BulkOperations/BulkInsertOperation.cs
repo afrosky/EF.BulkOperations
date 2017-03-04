@@ -10,6 +10,7 @@
     using Extensions;
     using System.Data.SqlClient;
     using EntityFramework.MappingAPI;
+    using Helpers;
 
     public class BulkInsertOperation : BulkOperationBase
     {
@@ -25,7 +26,7 @@
         {
         }
 
-        protected override long ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
+        protected override int ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
         {
             var tmpTableName = context.RandomTableName<TEntity>();
             var entities = collection.ToList();
@@ -33,7 +34,7 @@
 
             // Retrieve included columns definition
             var includedColumnsDef = settings.IncludedColumns != null
-                ? context.GetTableColumns<TEntity>(((NewExpression)settings.IncludedColumns.Body).Members.Select(m => m.Name))
+                ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IncludedColumns.Body))
                 : context.GetTableColumns<TEntity>().Where(c => !c.IsIdentity);
 
             // Retrieve identity column definition

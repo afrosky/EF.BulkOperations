@@ -62,6 +62,7 @@
     <Compile Include="Extensions\DbContextExtensions.cs" />
     <Compile Include="BulkOperations\BulkOperationSettings.cs" />
     <Compile Include="Generators\SqlGenerator.cs" />
+    <Compile Include="Helpers\ExpressionHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

@@ -11,6 +11,11 @@
         where TEntity : class
     {
         /// <summary>
+        /// The columns to use as identifer. By default, primary key columns are taken.
+        /// </summary>
+        public Expression<Func<TEntity, object>> IdentifierColumns { get; set; }
+
+        /// <summary>
         /// The included columns. By default, all columns are included.
         /// </summary>
         public Expression<Func<TEntity, object>> IncludedColumns { get; set; }

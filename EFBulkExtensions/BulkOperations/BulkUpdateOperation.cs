@@ -9,6 +9,7 @@
     using Generators;
     using Extensions;
     using System.Data.SqlClient;
+    using Helpers;
 
     public class BulkUpdateOperation : BulkOperationBase
     {
@@ -24,7 +25,7 @@
         {
         }
 
-        protected override long ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
+        protected override int ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
         {
             var tmpTableName = context.RandomTableName<TEntity>();
             var entities = collection.ToList();
@@ -33,15 +34,17 @@
 
             // Retrieve included columns definition
             var includedColumnsDef = settings.IncludedColumns != null
-                ? context.GetTableColumns<TEntity>(((NewExpression)settings.IncludedColumns.Body).Members.Select(m => m.Name))
+                ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IncludedColumns.Body))
                 : context.GetTableColumns<TEntity>();
 
-            // Retrieve primary keys column definition
-            var pksColumnDef = context.GetTablePrimaryKeys<TEntity>();
+            // Retrieve identifier columns definition
+            var identifierColumnsDef = settings.IdentifierColumns != null
+                ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IdentifierColumns.Body))
+                : context.GetTablePrimaryKeys<TEntity>();
 
-            if (!pksColumnDef.All(pk => includedColumnsDef.Any(c => pk.PropertyName == c.PropertyName)))
+            if (!identifierColumnsDef.All(pk => includedColumnsDef.Any(c => pk.PropertyName == c.PropertyName)))
             {
-                throw new EntityException(@"Included columns must contain primary key columns.");
+                throw new EntityException(@"Included columns must contain identifier columns.");
             }
 
             // Convert entity collection into a DataTable
@@ -56,7 +59,11 @@
 
             // Copy data from temporary table to destination table
             command = SqlGenerator
-                .BuildMergeIntoUpdate<TEntity>(tmpTableName, context.GetTableName<TEntity>(), pksColumnDef, includedColumnsDef.Where(c => !c.IsPk && !c.IsIdentity));
+                .BuildMergeIntoUpdate<TEntity>(
+                    tmpTableName,
+                    context.GetTableName<TEntity>(),
+                    identifierColumnsDef,
+                    includedColumnsDef.Where(c => !c.IsIdentity && !identifierColumnsDef.Any(i => i.ColumnName == c.ColumnName)));
 
             affectedRows = database.ExecuteSqlCommand(command);
 

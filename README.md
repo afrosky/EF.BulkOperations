@@ -4,7 +4,7 @@ This project is a rewrite largely inspired by **Tiago L. da Nóbrega** excellent
 with additional/rewritten features:
   - [x] Specify the columns to include in bulk operations
   - [x] Retrieve generated identities after a bulk insert
-  - [ ] Specify the columns to use as identifier for bulk operations **[Coming next]**
+  - [x] Specify the columns to use as identifier for bulk operations
   - [ ] Specify internal SqlBulkCopy options **[Coming next]**
 
 NOTE: Identifier columns (only primary keys for now) have to be retrieved before calling
@@ -22,14 +22,56 @@ context.BulkInsert(usersToInsert, settings =>
 ```
 
 ### Bulk update
+
+#### Simple
+
+By default, the primary key is used as identifier column.
+
 ```
 context.BulkUpdate(usersToUpdate, settings =>
 {
-    settings.IncludedColumns = s => new { s.Id, s.LastLoginDate };
+	settings.IncludedColumns = s => new { s.Id, s.LastLoginDate };
+});
+```
+
+#### Custom identifier column
+
+The following example updates the last update date of all external users:
+```
+var usersToUpdate = new List<User>
+{
+	new User { IsInternal = false, LastUpdateDate = DateTime.Now }
+};
+
+context.BulkUpdate(usersToUpdate, settings =>
+{
+	settings.IdentiferColumns = s => new { s.IsInternal };
+	settings.IncludedColumns = s => new { s.IsInternal, s.LastUpdateDate };
 });
 ```
 
 ### Bulk delete
+
+#### Simple
+
+By default, the primary key is used as identifier column.
+
 ```
 context.BulkDelete(usersToDelete);
+```
+
+#### Custom identifier column
+
+The following example deletes all external users:
+```
+var usersToDelete = new List<User>
+{
+	new User { IsInternal = false }
+};
+
+context.BulkUpdate(usersToUpdate, settings =>
+{
+	settings.IdentiferColumns = s => new { s.IsInternal };
+	settings.IncludedColumns = s => new { s.IsInternal };
+});
 ```

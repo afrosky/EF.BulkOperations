@@ -17,7 +17,7 @@
         /// <param name="entities">The collection of entites.</param>
         /// <param name="settings">The bulk operation settings factory.</param>
         /// <returns>The number of affected entities.</returns>
-        long Execute<TEntity>(DbContext context, IEnumerable<TEntity> collection, Action<BulkOperationSettings<TEntity>> settingsFactory = null)
+        int Execute<TEntity>(DbContext context, IEnumerable<TEntity> collection, Action<BulkOperationSettings<TEntity>> settingsFactory = null)
             where TEntity : class;
     }
 }
