@@ -3,3 +3,4 @@ EFBulkExtensions.Test/*
 packages/*
 EFBulkExtensions/bin/*
 EFBulkExtensions/obj/*
+EFBulkExtensions/EFBulkExtensions.csproj.user

@@ -35,15 +35,13 @@
             // Retrieve included columns definition
             var includedColumnsDef = settings.IncludedColumns != null
                 ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IncludedColumns.Body))
-                : context.GetTableColumns<TEntity>().Where(c => !c.IsIdentity);
+                : context.GetTableColumns<TEntity>();
+
+            // Exclude identity columns
+            includedColumnsDef = includedColumnsDef.Where(c => !c.IsIdentity);
 
             // Retrieve identity column definition
             var identityColumnDef = context.GetTableIdentityColumn<TEntity>();
-
-            if (includedColumnsDef.Any(c => identityColumnDef?.PropertyName == c.PropertyName))
-            {
-                throw new EntityException(@"Included columns can't contain identity column.");
-            }
 
             // Convert entity collection into a DataTable
             var dataTable = context.ToDataTable(entities, includedColumnsDef);
@@ -51,9 +49,9 @@
             // Return generated ids for bulk inserted elements
             if (settings.IsIdentityOutputEnabled)
             {
-                if (identityColumnDef == null)
+                if (identityColumnDef == null || !identityColumnDef.IsPk)
                 {
-                    throw new EntityException(@"Entity doesn't contain any identity column. Set BulkOperationSettings.IsIdentityOutputEnabled = false.");
+                    throw new EntityException(@"Entity doesn't contain an identity column corresponding to a primary key. Set BulkOperationSettings.IsIdentityOutputEnabled = false.");
                 }
 
                 // Create temporary table to store values to insert

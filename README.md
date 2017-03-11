@@ -13,10 +13,24 @@ bulk update/delete in order for the operation to retrieve entities to process.
 ## Sample usages
 
 ### Bulk insert
+
+#### Simple
+
+By default, all columns are included.
+
+```
+context.BulkInsert(usersToInsert);
+```
+
+#### Custom settings
+
 ```
 context.BulkInsert(usersToInsert, settings =>
 {
+    // Specify included columns
     settings.IncludedColumns = s => new { s.FirstName, s.LastName, s.LastLoginDate };
+    
+    // Retrieve generated ids
     settings.IsIdentityOutputEnabled = true;
 });
 ```
@@ -25,16 +39,15 @@ context.BulkInsert(usersToInsert, settings =>
 
 #### Simple
 
-By default, the primary key is used as identifier column.
+By default:
+  - All columns are included (properties not set result in default value).
+  - The primary key is used as identifier column.
 
 ```
-context.BulkUpdate(usersToUpdate, settings =>
-{
-	settings.IncludedColumns = s => new { s.LastLoginDate };
-});
+context.BulkUpdate(usersToUpdate);
 ```
 
-#### Custom identifier column
+#### Custom settings
 
 The following example updates the last update date of all external users:
 ```
@@ -45,8 +58,11 @@ var usersToUpdate = new List<User>
 
 context.BulkUpdate(usersToUpdate, settings =>
 {
-	settings.IdentiferColumns = s => new { s.IsInternal };
-	settings.IncludedColumns = s => new { s.LastUpdateDate };
+    // Specify identifier columns
+    settings.IdentiferColumns = s => new { s.IsInternal };
+
+    // Specify included columns
+    settings.IncludedColumns = s => new { s.LastUpdateDate };
 });
 ```
 
@@ -60,7 +76,7 @@ By default, the primary key is used as identifier column.
 context.BulkDelete(usersToDelete);
 ```
 
-#### Custom identifier column
+#### Custom settings
 
 The following example deletes all external users:
 ```
@@ -71,6 +87,7 @@ var usersToDelete = new List<User>
 
 context.BulkDelete(usersToDelete, settings =>
 {
-	settings.IdentiferColumns = s => new { s.IsInternal };
+    // Specify identifier columns
+    settings.IdentiferColumns = s => new { s.IsInternal };
 });
 ```
