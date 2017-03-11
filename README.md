@@ -16,7 +16,7 @@ bulk update/delete in order for the operation to retrieve entities to process.
 ```
 context.BulkInsert(usersToInsert, settings =>
 {
-    settings.IncludedColumns = s => new { s.Id, s.FirstName, s.LastName, s.LastLoginDate };
+    settings.IncludedColumns = s => new { s.FirstName, s.LastName, s.LastLoginDate };
     settings.IsIdentityOutputEnabled = true;
 });
 ```
