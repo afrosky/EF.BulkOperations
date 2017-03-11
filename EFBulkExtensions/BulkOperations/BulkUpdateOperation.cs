@@ -42,10 +42,8 @@
                 ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IdentifierColumns.Body))
                 : context.GetTablePrimaryKeys<TEntity>();
 
-            if (!identifierColumnsDef.All(pk => includedColumnsDef.Any(c => pk.PropertyName == c.PropertyName)))
-            {
-                throw new EntityException(@"Included columns must contain identifier columns.");
-            }
+            // Merge identifier columns with included columns
+            includedColumnsDef = includedColumnsDef.Union(identifierColumnsDef);
 
             // Convert entity collection into a DataTable
             var dataTable = context.ToDataTable(entities, includedColumnsDef);

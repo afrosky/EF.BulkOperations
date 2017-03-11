@@ -1,3 +1,5 @@
 .vs/EFBulkExtensions/v14/.suo
 EFBulkExtensions.Test/*
 packages/*
+EFBulkExtensions/bin/*
+EFBulkExtensions/obj/*

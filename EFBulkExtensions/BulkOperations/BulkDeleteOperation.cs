@@ -30,20 +30,10 @@
             var database = context.Database;
             var affectedRows = 0;
 
-            // Retrieve included columns definition
-            var includedColumnsDef = settings.IncludedColumns != null
-                ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IncludedColumns.Body))
-                : context.GetTablePrimaryKeys<TEntity>();
-
             // Retrieve identifier columns definition
             var identifierColumnsDef = settings.IdentifierColumns != null
                 ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IdentifierColumns.Body))
                 : context.GetTablePrimaryKeys<TEntity>();
-
-            if (!identifierColumnsDef.All(pk => includedColumnsDef.Any(c => pk.PropertyName == c.PropertyName)))
-            {
-                throw new EntityException(@"Included columns must contain identifier columns.");
-            }
 
             // Convert entity collection into a DataTable
             var dataTable = context.ToDataTable(entities, identifierColumnsDef);

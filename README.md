@@ -30,7 +30,7 @@ By default, the primary key is used as identifier column.
 ```
 context.BulkUpdate(usersToUpdate, settings =>
 {
-	settings.IncludedColumns = s => new { s.Id, s.LastLoginDate };
+	settings.IncludedColumns = s => new { s.LastLoginDate };
 });
 ```
 
@@ -46,7 +46,7 @@ var usersToUpdate = new List<User>
 context.BulkUpdate(usersToUpdate, settings =>
 {
 	settings.IdentiferColumns = s => new { s.IsInternal };
-	settings.IncludedColumns = s => new { s.IsInternal, s.LastUpdateDate };
+	settings.IncludedColumns = s => new { s.LastUpdateDate };
 });
 ```
 
@@ -72,6 +72,5 @@ var usersToDelete = new List<User>
 context.BulkDelete(usersToDelete, settings =>
 {
 	settings.IdentiferColumns = s => new { s.IsInternal };
-	settings.IncludedColumns = s => new { s.IsInternal };
 });
 ```
