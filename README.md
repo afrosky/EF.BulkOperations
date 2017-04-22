@@ -7,9 +7,6 @@ with additional/rewritten features:
   - [x] Specify the columns to use as identifier for bulk operations
   - [ ] Specify internal SqlBulkCopy options **[Coming next]**
 
-NOTE: Identifier columns (only primary keys for now) have to be retrieved before calling
-bulk update/delete in order for the operation to retrieve entities to process.
-
 ## Sample usages
 
 ### Bulk insert
@@ -17,6 +14,7 @@ bulk update/delete in order for the operation to retrieve entities to process.
 #### Simple
 
 By default, all columns are included.
+Duplicates are automatically excluded (According to the specified identifier columns or identity column).
 
 ```
 context.BulkInsert(usersToInsert);

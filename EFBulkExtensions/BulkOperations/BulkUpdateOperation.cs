@@ -57,11 +57,12 @@
 
             // Copy data from temporary table to destination table
             command = SqlGenerator
-                .BuildMergeIntoUpdate<TEntity>(
+                .BuildMergeIntoUpdate(
                     tmpTableName,
                     context.GetTableName<TEntity>(),
                     identifierColumnsDef,
-                    includedColumnsDef.Where(c => !c.IsIdentity && !identifierColumnsDef.Any(i => i.ColumnName == c.ColumnName)));
+                    includedColumnsDef.Where(c => !c.IsIdentity && !identifierColumnsDef.Any(i => i.ColumnName == c.ColumnName)))
+                    .EndCommand();
 
             affectedRows = database.ExecuteSqlCommand(command);
 

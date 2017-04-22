@@ -47,7 +47,8 @@
 
             // Copy data from temporary table to destination table
             command = SqlGenerator
-                .BuildMergeIntoDelete(tmpTableName, context.GetTableName<TEntity>(), identifierColumnsDef);
+                .BuildMergeIntoDelete(tmpTableName, context.GetTableName<TEntity>(), identifierColumnsDef)
+                .EndCommand();
 
             affectedRows = database.ExecuteSqlCommand(command);
 

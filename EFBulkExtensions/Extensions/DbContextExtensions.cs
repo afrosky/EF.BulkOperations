@@ -171,19 +171,22 @@
             IPropertyMap identityColumn,
             IList<TEntity> entities)
         {
-            var counter = 0;
-
-            foreach (var result in identities)
+            if (identityColumn != null)
             {
-                var property = entities[counter].GetType().GetProperty(identityColumn.PropertyName);
+                var counter = 0;
 
-                if (!property.CanWrite)
+                foreach (var result in identities)
                 {
-                    throw new Exception();
-                }
+                    var property = entities[counter].GetType().GetProperty(identityColumn.PropertyName);
 
-                property.SetValue(entities[counter], result, null);
-                counter++;
+                    if (!property.CanWrite)
+                    {
+                        throw new Exception();
+                    }
+
+                    property.SetValue(entities[counter], result, null);
+                    counter++;
+                }
             }
         }
 

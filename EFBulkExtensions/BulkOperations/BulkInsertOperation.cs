@@ -32,13 +32,15 @@
             var entities = collection.ToList();
             var database = context.Database;
 
+            // Retrieve identifier columns definition
+            var identifierColumnsDef = settings.IdentifierColumns != null
+                ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IdentifierColumns.Body))
+                : context.GetTablePrimaryKeys<TEntity>();
+
             // Retrieve included columns definition
             var includedColumnsDef = settings.IncludedColumns != null
                 ? context.GetTableColumns<TEntity>(ExpressionHelper.GetPropertyNames(settings.IncludedColumns.Body))
                 : context.GetTableColumns<TEntity>();
-
-            // Exclude identity columns
-            includedColumnsDef = includedColumnsDef.Where(c => !c.IsIdentity);
 
             // Retrieve identity column definition
             var identityColumnDef = context.GetTableIdentityColumn<TEntity>();
@@ -46,50 +48,59 @@
             // Convert entity collection into a DataTable
             var dataTable = context.ToDataTable(entities, includedColumnsDef);
 
-            // Return generated ids for bulk inserted elements
-            if (settings.IsIdentityOutputEnabled)
+            // Create temporary table to store values to insert
+            var command = SqlGenerator.BuildCreateTempTable<TEntity>(context, tmpTableName, includedColumnsDef);
+            database.ExecuteSqlCommand(command);
+
+            // Bulk inset data to temporary temporary table
+            context.BulkCopy(dataTable, tmpTableName, SqlBulkCopyOptions.Default);
+
+            if (settings.IsIdentityOutputEnabled && identityColumnDef != null)
             {
-                if (identityColumnDef == null || !identityColumnDef.IsPk)
-                {
-                    throw new EntityException(@"Entity doesn't contain an identity column corresponding to a primary key. Set BulkOperationSettings.IsIdentityOutputEnabled = false.");
-                }
-
-                // Create temporary table to store values to insert
-                var command = SqlGenerator.BuildCreateTempTable<TEntity>(context, tmpTableName, includedColumnsDef);
-                database.ExecuteSqlCommand(command);
-
-                // Bulk inset data to temporary temporary table
-                context.BulkCopy(dataTable, tmpTableName, SqlBulkCopyOptions.Default);
-
                 // Create temporary table to store inserted identities
                 var tmpOutputTableName = context.RandomTableName<TEntity>();
                 command = SqlGenerator.BuildCreateTempTable<TEntity>(context, tmpOutputTableName, new List<IPropertyMap> { identityColumnDef });
                 database.ExecuteSqlCommand(command);
 
                 // Copy data from temporary table to destination table with id output to another temporary table
-                command = SqlGenerator.BuildInsertIntoOutput<TEntity>(context, tmpOutputTableName, tmpTableName, identityColumnDef, includedColumnsDef);
-                database.ExecuteSqlCommand(command);
+                command = SqlGenerator.BuildMergeIntoInsertOutput(
+                    tmpTableName,
+                    context.GetTableName<TEntity>(),
+                    tmpOutputTableName,
+                    identifierColumnsDef,
+                    includedColumnsDef.Where(c => !c.IsIdentity),
+                    new List<IPropertyMap> { identityColumnDef })
+                    .EndCommand();
 
-                // Remove temporary output
-                command = SqlGenerator.BuildDropTable(tmpTableName);
                 database.ExecuteSqlCommand(command);
 
                 //Load generated IDs from temporary output table into the entities.
-                command = SqlGenerator.BuildSelect(tmpOutputTableName, new List<IPropertyMap> { identityColumnDef }, OrderByColumns: new List<IPropertyMap> { identityColumnDef });
+                command = SqlGenerator.BuildSelect(tmpOutputTableName, new List<IPropertyMap> { identityColumnDef }).EndCommand();
                 var identities = database.SqlQuery<long>(command).ToList();
+
+                // Update entities identity
+                context.UpdateEntitiesIdentity(identities, identityColumnDef, entities);
 
                 // Remove temporary output
                 command = SqlGenerator.BuildDropTable(tmpOutputTableName);
                 database.ExecuteSqlCommand(command);
-
-                // Update entities identity
-                context.UpdateEntitiesIdentity(identities, identityColumnDef, entities);
             }
             else
             {
-                //Bulk insert data to destination table
-                context.BulkCopy(dataTable, context.GetTableName<TEntity>(), SqlBulkCopyOptions.Default);
-            }
+                // Copy data from temporary table to destination table with id output to another temporary table
+                command = SqlGenerator.BuildMergeIntoInsert(
+                    tmpTableName,
+                    context.GetTableName<TEntity>(),
+                    identifierColumnsDef,
+                    includedColumnsDef.Where(c => !c.IsIdentity))
+                    .EndCommand();
+
+                database.ExecuteSqlCommand(command);
+            }    
+
+            // Remove temporary output
+            command = SqlGenerator.BuildDropTable(tmpTableName);
+            database.ExecuteSqlCommand(command);
 
             return dataTable.Rows.Count;
         }
