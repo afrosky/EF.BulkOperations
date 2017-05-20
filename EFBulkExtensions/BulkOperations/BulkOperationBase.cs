@@ -45,7 +45,7 @@ namespace EFBulkExtensions.BulkOperations
             catch (Exception)
             {
                 //Rollback if internal transaction exists.
-                transaction?.Rollback();
+                transaction?.Dispose();
                 throw;
             }
         }
