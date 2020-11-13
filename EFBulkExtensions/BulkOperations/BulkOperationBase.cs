@@ -1,56 +1,38 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.Entity.Core;
-using System.Linq;
-using EFBulkExtensions.Extensions;
-
-namespace EFBulkExtensions.BulkOperations
+﻿namespace EFBulkExtensions.BulkOperations
 {
+    using System.Collections.Generic;
+    using System.Data.Entity;
+    using Extensions;
+
     public abstract class BulkOperationBase : IBulkOperation
     {
-        public int Execute<TEntity>(DbContext context, IEnumerable<TEntity> collection, Action<BulkOperationSettings<TEntity>> settingsFactory = null)
+        public void Execute<TEntity>(
+            DbContext context,
+            IEnumerable<TEntity> entities,
+            BulkMergeOperationType operationType,
+            BulkConfig<TEntity> config)
             where TEntity : class
         {
-            if (!context.ContainsTable<TEntity>())
-            {
-                throw new EntityException(@"The specified entity type is not recognized as a DbContext type.");
-            }
-
-            var affectedRows = default(int);
-            var settings = new BulkOperationSettings<TEntity>();
-
-            if (!collection.Any())
-            {
-                return affectedRows;
-            }
-
-            // Retrieve bulk operation settings
-            if (settingsFactory != null)
-            {
-                settingsFactory.Invoke(settings);
-            }
+            BulkTableInfo<TEntity> tableInfo = new BulkTableInfo<TEntity>(context, entities, config, operationType);
 
             // Creates inner transaction for the scope of the operation if the context doesn't have one.
             var transaction = context.InternalTransaction();
 
             try
             {
-                affectedRows = ExecuteCommand(context, collection, settings);
+                ExecuteCommand(context, entities, tableInfo);
 
                 //Commit if internal transaction exists.
                 transaction?.Commit();
-                return affectedRows;
             }
-            catch (Exception)
+            finally
             {
-                //Rollback if internal transaction exists.
                 transaction?.Dispose();
-                throw;
             }
         }
 
-        protected abstract int ExecuteCommand<TEntity>(DbContext context, IEnumerable<TEntity> collection, BulkOperationSettings<TEntity> settings)
+        protected abstract void ExecuteCommand<TEntity>(
+            DbContext context, IEnumerable<TEntity> entities, BulkTableInfo<TEntity> tableInfo)
             where TEntity : class;
     }
 }

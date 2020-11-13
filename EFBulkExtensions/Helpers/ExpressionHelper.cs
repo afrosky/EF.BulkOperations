@@ -12,7 +12,10 @@
 
             if (expression is NewExpression)
             {
-                properties = ((NewExpression)expression).Members.Select(m => m.Name);
+                if (((NewExpression)expression).Members != null)
+                {
+                    properties = ((NewExpression)expression).Members.Select(m => m.Name);
+                }
             }
 
             return properties;

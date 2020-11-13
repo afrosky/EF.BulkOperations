@@ -1,91 +1,83 @@
 # EFBulkExtensions
-This project is a rewrite largely inspired by **Tiago L. da Nóbrega** excellent
-**[EntityFramework.BulkExtensions](https://github.com/tiagoln/EntityFramework.BulkExtensions)** project
-with additional/rewritten features:
-  - [x] Specify the columns to include in bulk operations
-  - [x] Retrieve generated identities after a bulk insert
-  - [x] Specify the columns to use as identifier for bulk operations
-  - [ ] Specify internal SqlBulkCopy options **[Coming next]**
 
-## Sample usages
+This project is a port of **Boris Djurdjevic** excellent **[EFCore.BulkExtensions](https://github.com/borisdj/EFCore.BulkExtensions)** project to .NET Framework.
 
-### Bulk insert
+## Usage
 
-#### Simple
-
-By default, all columns are included.
-Duplicates are automatically excluded (According to the specified identifier columns or identity column).
+It's pretty simple and straightforward.
+Bulk Extensions are made on DbContext class and can be used like this (Async methods are not supported yet):
 
 ```
-context.BulkInsert(usersToInsert);
+context.BulkInsert(usersToInsert, optionalConfig);
+context.BulkUpdate(usersToUpdate, optionalConfig);
+context.BulkDelete(usersToDelete, optionalConfig);
 ```
 
-#### Custom settings
+**BulkMerge** can be used if you need to do bulk operations like `upsert` (insert or update at once).
 
 ```
-context.BulkInsert(usersToInsert, settings =>
-{
-    // Specify included columns
-    settings.IncludedColumns = s => new { s.FirstName, s.LastName, s.LastLoginDate };
-    
-    // Retrieve generated ids
-    settings.IsIdentityOutputEnabled = true;
-});
+context.BulkMerge(usersToMerge, bulkMergeOperationType, optionalConfig);
 ```
 
-### Bulk update
+**BulkMergeOperationType** is a `Bitwise Enum` with the following values:
 
-#### Simple
+- Insert
+- Update
+- Delete
 
-By default:
-  - All columns are included (properties not set result in default value).
-  - The primary key is used as identifier column.
+> A `Bitwise Enum` implies you can specify any combination. For example, an `upsert` would be represented like the following expression: `BulkMergeOperationType.Insert | BulkMergeOperationType.Update`.
 
-```
-context.BulkUpdate(usersToUpdate);
-```
+## BulkConfig arguments
 
-#### Custom settings
+**BulkInsert**, **BulkUpdate**, **BulkDelete**, **BulkMerge** methods can have optional argument **BulkConfig** with following properties:
 
-The following example updates the last update date of all external users:
-```
-var usersToUpdate = new List<User>
-{
-	new User { IsInternal = false, LastUpdateDate = DateTime.Now }
-};
+| Name                            | Type                              | Description                                                                                                                                                   | Default Value              |
+| ------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| SetOutputIdentity               | bool                              | A value indicating whether identity of inserted entities should be returned                                                                                   | false                      |
+| IdentifierColumns               | Expression<Func<TEntity, object>> | The columns to use as identifer. By default, primary key columns are taken                                                                                    | null                       |
+| IncludedColumns                 | Expression<Func<TEntity, object>> | The included columns. By default, all columns are included                                                                                                    | null                       |
+| SqlBulkCopyOptions              | SqlBulkCopyOptions                | Bitwise flag that specifies one or more options to use with an instance of System.Data.SqlClient.SqlBulkCopy                                                  | SqlBulkCopyOptions.Default |
+| SqlBulkCopyBatchSize            | int                               | Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server                                                          | 0                          |
+| SqlBulkCopyNotifyAfter          | int?                              | Defines the number of rows to be processed before generating a notification event                                                                             | null                       |
+| SqlBulkCopyTimeout              | int?                              | Number of seconds for the operation to complete before it times out (30 seconds by default)<br />Set 0 for infinite timeout                                   | null                       |
+| SqlBulkCopyEnableStreaming      | bool                              | A value indicating whether System.Data.SqlClient.SqlBulkCopy object streams data from an System.Data.IDataReader object                                       | false                      |
+| SqlBulkCopyProgressEventHandler | Action&lt;decimal&gt;             | An action to be executed while bulk operation is in progress (useful for long process and display loading status) <br/>**Input**: the current progress (in %) |
+| null                            |
+| MergeWithHoldLock               | bool                              | A value indicating whether merge operation uses HOLD LOCK                                                                                                     | true                       |
+| IsBulkResultEnabled             | bool                              | A value indicating whether bulk results should be calculated                                                                                                  | false                      |
+| UseTempDb                       | bool                              | A value indicating whether the use of tempDB is enabled                                                                                                       | true                       |
+| BulkResult                      | BulkResult                        | The bulk operation results.                                                                                                                                   | null                       |
 
-context.BulkUpdate(usersToUpdate, settings =>
-{
-    // Specify identifier columns
-    settings.IdentiferColumns = s => new { s.IsInternal };
+If a different behavior is intended, create a new instance of `BulkConfig`, set the desired properties to their desired value, then pass it to bulk extension methods.
 
-    // Specify included columns
-    settings.IncludedColumns = s => new { s.LastUpdateDate };
-});
-```
+### _SetOutputIdentity_
 
-### Bulk delete
+When **SetOutputIdentity** is set to `True`, you have to set ordered value to your identity column.
+For example if table already has rows, let's say it has 1000 rows with Id-s (1:1000), and we now want to add 300 more.
+Since Id-s are generated in Db we could not set them, they would all be 0 (int default) in list.
+But if we want to keep the order as they are ordered in list then those Id-s should be set say 1 to 300 (for BulkInsert).
+Here single Id value itself doesn't matter, db will change it to (1001:1300), what matters is their mutual relationship for sorting.
+Insertion order is implemented with TOP in conjuction with ORDER BY [stackoverflow:merge-into-insertion-order](https://stackoverflow.com/questions/884187/merge-into-insertion-order).
 
-#### Simple
+> As a general rule, for sorting to be preserved, set ascending ordered negative values to the identity property for values to insert.
+> In case of a upsert operation (using **BulkMerge**), don't forget to sort the list of items before calling the operation.<br />
+> Example: if we have a list of 8000 entries to insert, say 3000 for update (they keep the real Id) and 5000 for insert then Id-s could be (-5000:-1).
 
-By default, the primary key is used as identifier column.
+**SetOutputIdentity** is useful when **BulkInsert** is done to multiple related tables, that have Identity column.
+After Insert is done to first table, we need Id-s that were generated in Db because they are FK(ForeignKey) in second table.
 
-```
-context.BulkDelete(usersToDelete);
-```
+### _IsBulkResultEnabled_
 
-#### Custom settings
+When **IsBulkResultEnabled** is set to `True` the result is added to the provided **BulkConfig**, in **BulkResult** property which itself contains the following properties:
 
-The following example deletes all external users:
-```
-var usersToDelete = new List<User>
-{
-	new User { IsInternal = false }
-};
+| Name     | Type | Description                 |
+| -------- | ---- | --------------------------- |
+| Inserted | int  | The number of inserted rows |
+| Updated  | int  | The number of updated rows  |
+| Deleted  | int  | The number of deleted rows  |
 
-context.BulkDelete(usersToDelete, settings =>
-{
-    // Specify identifier columns
-    settings.IdentiferColumns = s => new { s.IsInternal };
-});
-```
+### _UseTempDB_
+
+When **UseTempDB** is set to `False`, temporary tables will be created next to other tables.
+
+> Use this settings for debug purpose.
