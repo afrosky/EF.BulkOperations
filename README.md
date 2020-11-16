@@ -5,7 +5,7 @@ This project is a port of **Boris Djurdjevic** excellent **[EFCore.BulkExtension
 ## Usage
 
 It's pretty simple and straightforward.
-Bulk Extensions are made on DbContext class and can be used like this (Async methods are not supported yet):
+Bulk Extensions are extension methods on `DbContext` class and can be used as the following:
 
 ```
 context.BulkInsert(usersToInsert, optionalConfig);
@@ -18,6 +18,8 @@ context.BulkDelete(usersToDelete, optionalConfig);
 ```
 context.BulkMerge(usersToMerge, bulkMergeOperationType, optionalConfig);
 ```
+
+> Note: Async methods are not supported.
 
 **BulkMergeOperationType** is a `Bitwise Enum` with the following values:
 
@@ -41,8 +43,7 @@ context.BulkMerge(usersToMerge, bulkMergeOperationType, optionalConfig);
 | SqlBulkCopyNotifyAfter          | int?                              | Defines the number of rows to be processed before generating a notification event                                                                             | null                       |
 | SqlBulkCopyTimeout              | int?                              | Number of seconds for the operation to complete before it times out (30 seconds by default)<br />Set 0 for infinite timeout                                   | null                       |
 | SqlBulkCopyEnableStreaming      | bool                              | A value indicating whether System.Data.SqlClient.SqlBulkCopy object streams data from an System.Data.IDataReader object                                       | false                      |
-| SqlBulkCopyProgressEventHandler | Action&lt;decimal&gt;             | An action to be executed while bulk operation is in progress (useful for long process and display loading status) <br/>**Input**: the current progress (in %) |
-| null                            |
+| SqlBulkCopyProgressEventHandler | Action&lt;decimal&gt;             | An action to be executed while bulk operation is in progress (useful for long process and display loading status) <br/>**Input**: the current progress (in %) | null                       |
 | MergeWithHoldLock               | bool                              | A value indicating whether merge operation uses HOLD LOCK                                                                                                     | true                       |
 | IsBulkResultEnabled             | bool                              | A value indicating whether bulk results should be calculated                                                                                                  | false                      |
 | UseTempDb                       | bool                              | A value indicating whether the use of tempDB is enabled                                                                                                       | true                       |
@@ -50,7 +51,7 @@ context.BulkMerge(usersToMerge, bulkMergeOperationType, optionalConfig);
 
 If a different behavior is intended, create a new instance of `BulkConfig`, set the desired properties to their desired value, then pass it to bulk extension methods.
 
-### _SetOutputIdentity_
+### SetOutputIdentity
 
 When **SetOutputIdentity** is set to `True`, you have to set ordered value to your identity column.
 For example if table already has rows, let's say it has 1000 rows with Id-s (1:1000), and we now want to add 300 more.
@@ -66,7 +67,7 @@ Insertion order is implemented with TOP in conjuction with ORDER BY [stackoverfl
 **SetOutputIdentity** is useful when **BulkInsert** is done to multiple related tables, that have Identity column.
 After Insert is done to first table, we need Id-s that were generated in Db because they are FK(ForeignKey) in second table.
 
-### _IsBulkResultEnabled_
+### IsBulkResultEnabled
 
 When **IsBulkResultEnabled** is set to `True` the result is added to the provided **BulkConfig**, in **BulkResult** property which itself contains the following properties:
 
@@ -76,7 +77,7 @@ When **IsBulkResultEnabled** is set to `True` the result is added to the provide
 | Updated  | int  | The number of updated rows  |
 | Deleted  | int  | The number of deleted rows  |
 
-### _UseTempDB_
+### UseTempDB
 
 When **UseTempDB** is set to `False`, temporary tables will be created next to other tables.
 
