@@ -1,0 +1,15 @@
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EF.BulkOperations.dll.config
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EF.BulkOperations.dll
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EF.BulkOperations.pdb
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EntityFramework.dll
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EntityFramework.Metadata.dll
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EntityFramework.SqlServer.dll
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\FastMember.dll
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EntityFramework.xml
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EntityFramework.Metadata.xml
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\EntityFramework.SqlServer.xml
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\Microsoft.VisualStudio.QualityTools.UnitTestFramework.xml
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\bin\Release\fr\Microsoft.VisualStudio.QualityTools.UnitTestFramework.resources.dll
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\obj\Release\EF.BulkOperations.dll
+C:\Users\Musuel\Desktop\GITHUB\EF.BulkOperations\EF.BulkOperations\obj\Release\EF.BulkOperations.pdb

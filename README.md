@@ -1,4 +1,4 @@
-# EFBulkExtensions
+# EF.BulkOperations
 
 This project is a port of **Boris Djurdjevic** excellent **[EFCore.BulkExtensions](https://github.com/borisdj/EFCore.BulkExtensions)** project to .NET Framework.
 
