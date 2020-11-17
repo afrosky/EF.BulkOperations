@@ -1,6 +1,6 @@
-.vs/EFBulkExtensions/v14/.suo
-EFBulkExtensions.Test/*
+.vs/EF.BulkOperations/v14/.suo
+EF.BulkOperations.Test/*
 packages/*
-EFBulkExtensions/bin/*
-EFBulkExtensions/obj/*
-EFBulkExtensions/EFBulkExtensions.csproj.user
+EF.BulkOperations/bin/*
+EF.BulkOperations/obj/*
+EF.BulkOperations/EF.BulkOperations.csproj.user
