@@ -2,6 +2,10 @@
 
 This project is a port of **Boris Djurdjevic** excellent **[EFCore.BulkExtensions](https://github.com/borisdj/EFCore.BulkExtensions)** project to .NET Framework.
 
+## Install Package
+
+You can get the package from **Nuget**: https://www.nuget.org/packages/EF.BulkOperations/
+
 ## Usage
 
 It's pretty simple and straightforward.
